@@ -33,6 +33,7 @@ class Conversation(Base):
     id = Column(Integer, primary_key=True)
     company_id = Column(String, ForeignKey("companies.company_id"), nullable=False)
     conversation_id = Column(String, nullable=False)
+    title = Column(String, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     company = relationship("Company", back_populates="conversations")
 

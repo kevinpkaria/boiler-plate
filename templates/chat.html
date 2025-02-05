@@ -59,6 +59,7 @@
         <!-- Sidebar -->
         <aside class="w-64 p-4 sticky top-0 h-screen overflow-y-auto">
             <h2 class="text-lg font-semibold mb-4">Conversations</h2>
+            <button class="mb-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors duration-200" onclick="createNewChat()">New Chat 💬</button>
             <ul id="conversationList" class="space-y-2">
                 <!-- Example conversation item -->
                 <li class="flex justify-between items-center">
@@ -233,8 +234,8 @@
                     const listItem = document.createElement('li');
                     listItem.className = 'flex justify-between items-center';
                     listItem.innerHTML = `
-                        <a href="/home?company_id=${companyId}&conversation_id=${conversation}" class="block p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700">${conversation}</a>
-                        <button class="text-red-500 hover:text-red-700" onclick="deleteConversation('${conversation}')">🗑️</button>
+                        <a href="/home?company_id=${companyId}&conversation_id=${conversation.id}" class="block p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700">${conversation.title}</a>
+                        <button class="text-red-500 hover:text-red-700" onclick="deleteConversation('${conversation.id}')">🗑️</button>
                     `;
                     conversationList.appendChild(listItem);
                 });
@@ -244,6 +245,26 @@
         }
         // Fetch conversations on page load
         document.addEventListener('DOMContentLoaded', fetchConversations);
+
+        async function createNewChat() {
+            try {
+                const companyId = localStorage.getItem('company_id');
+                if (!companyId) {
+                    alert('Company ID is missing');
+                    return;
+                }
+
+                const response = await fetch(`/new-chat?company_id=${companyId}`);
+                if (response.ok) {
+                    const newChatUrl = response.url;
+                    window.location.href = newChatUrl; // Redirect to the new chat
+                } else {
+                    alert('Failed to create a new chat');
+                }
+            } catch (error) {
+                console.error('Error creating new chat:', error);
+            }
+        }
     </script>
 </body>
 </html>

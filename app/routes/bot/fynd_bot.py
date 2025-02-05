@@ -7,6 +7,8 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
+TIMEOUT_SECONDS = 60.0
+
 base_url = os.getenv("COPILOT_BASE_URL")
 
 # Headers for the API requests, including authentication
@@ -31,7 +33,7 @@ async def get_conversations(conversation_id: int):
     url = f"{base_url}/conversations/{conversation_id}/messages"
     async with httpx.AsyncClient() as client:
         response = await client.get(
-            url, headers=headers, timeout=httpx.Timeout(30.0, read=None)
+            url, headers=headers, timeout=httpx.Timeout(TIMEOUT_SECONDS, read=None)
         )
         response.raise_for_status()
         response = response.json()
@@ -60,7 +62,7 @@ async def create_conversation(company_id: int):
 
     async with httpx.AsyncClient() as client:
         response = await client.post(
-            url, headers=headers, json=data, timeout=httpx.Timeout(30.0, read=None)
+            url, headers=headers, json=data, timeout=httpx.Timeout(TIMEOUT_SECONDS, read=None)
         )
         response.raise_for_status()  # Raise an error for bad responses
         return response.json()
@@ -89,7 +91,7 @@ async def send_message(query, conversation_id):
             headers=headers,
             params=params,
             json=data,
-            timeout=httpx.Timeout(30.0, read=None),
+            timeout=httpx.Timeout(TIMEOUT_SECONDS, read=None),
         )
         response.raise_for_status()  # Raise an error for bad responses
 
