@@ -1,5 +1,6 @@
 import os
 
+import httpx
 import requests
 from dotenv import load_dotenv
 
@@ -23,7 +24,26 @@ user_id = os.getenv("COPILOT_USER_ID")
 title = "FyndBotQuery"
 
 
-def create_conversation(company_id: int, oauth_token: str):
+async def get_conversations(conversation_id: int):
+    """
+    Get all conversations for a company.
+    """
+    url = f"{base_url}/conversations/{conversation_id}/messages"
+    async with httpx.AsyncClient() as client:
+        response = await client.get(url, headers=headers, timeout=httpx.Timeout(30.0, read=None))
+        response.raise_for_status()
+        response = response.json()
+        messages = [
+            {
+                "role": message["role"],
+                "content": message["content"],
+            }
+            for message in response["items"]
+        ]
+        return messages[::-1]
+
+
+async def create_conversation(company_id: int):
     """
     Create a new conversation with the API.
 
@@ -31,16 +51,18 @@ def create_conversation(company_id: int, oauth_token: str):
         dict: JSON response from the API containing conversation details.
     """
     url = f"{base_url}/conversations"
-    meta = {"company_id": company_id, "authorization_token": oauth_token}
+    meta = {"company_id": company_id}
     data = {"title": title, "userId": user_id, "meta": meta}
     # Send POST request to create a conversation
-    response = requests.post(url, headers=headers, json=data)
-    response.raise_for_status()  # Raise an error for bad responses
+    # response = requests.post(url, headers=headers, json=data)
 
-    return response.json()
+    async with httpx.AsyncClient() as client:
+        response = await client.post(url, headers=headers, json=data, timeout=httpx.Timeout(30.0, read=None))
+        response.raise_for_status()  # Raise an error for bad responses
+        return response.json()
 
 
-def send_message(query, conversation_id):
+async def send_message(query, conversation_id):
     """
     Send a message to a specific conversation.
 
@@ -55,14 +77,16 @@ def send_message(query, conversation_id):
     params = {"wait": "true", "generateAssistantMessage": "true"}
     data = {"content": query, "role": "user", "userId": user_id}
 
-    # Send POST request to send a message
-    response = requests.post(url, headers=headers, params=params, json=data)
-    response.raise_for_status()  # Raise an error for bad responses
+    # # Send POST request to send a message
+    # response = requests.post(url, headers=headers, params=params, json=data)
+    async with httpx.AsyncClient() as client:
+        response = await client.post(url, headers=headers, params=params, json=data, timeout=httpx.Timeout(30.0, read=None))
+        response.raise_for_status()  # Raise an error for bad responses
 
     return response.json()
 
 
-def process_query(query, conversation_id):
+async def process_query(query, conversation_id):
     """
     Process a query by sending it to the conversation and returning the response.
 
@@ -73,12 +97,7 @@ def process_query(query, conversation_id):
     Returns:
         dict: A dictionary containing the output or an error message.
     """
-    try:
-        # Send the message and get the response
-        message_response = send_message(query, conversation_id)
-        reply_content = message_response["reply"]["content"]
-        return {"output": reply_content}
-    except Exception as e:
-        # Log the error and return an error message
-        logger.error(f"Error processing query: {e}")
-        return {"error": "An error occurred while processing your request."}
+    # Send the message and get the response
+    message_response = await send_message(query, conversation_id)
+    reply_content = message_response["reply"]["content"]
+    return {"output": reply_content}

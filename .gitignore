@@ -44,3 +44,4 @@ session_storage.db*.db
 .env
 
 logs/*
+*.db

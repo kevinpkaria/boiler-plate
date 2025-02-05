@@ -18,93 +18,166 @@
             animation: fadeIn 0.3s ease-in forwards;
             margin: 1rem 0;
             max-width: 80%;
+            padding: 1rem;
+            border-radius: 1rem;
         }
         .message.user {
             margin-left: auto;
             background-color: #3b82f6;
             color: white;
             border-radius: 1rem 1rem 0 1rem;
-            padding: 1rem;
         }
         .message.assistant {
             margin-right: auto;
             background-color: #f3f4f6;
             color: #1f2937;
             border-radius: 1rem 1rem 1rem 0;
-            padding: 1rem;
         }
         .dark .message.assistant {
             background-color: #374151;
             color: #f3f4f6;
         }
+        .prose {
+            max-width: 100%;
+        }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        aside {
+            background-color: #f3f4f6; /* Light mode background */
+            color: #1f2937; /* Light mode text color */
+        }
+        .dark aside {
+            background-color: #374151; /* Dark mode background */
+            color: #f3f4f6; /* Dark mode text color */
+        }
     </style>
 </head>
 <body class="antialiased transition-colors duration-200 dark bg-gray-900" x-data="{ darkMode: true }" :class="darkMode ? 'dark bg-gray-900' : 'bg-gray-50'">
-    <div class="min-h-screen">
-        <!-- Header -->
-        <header class="fixed w-full top-0 z-10 border-b dark:border-gray-700 bg-white dark:bg-gray-800 transition-colors duration-200">
-            <div class="container mx-auto px-4 py-4 flex justify-between items-center">
-                <h1 class="text-xl font-semibold text-gray-800 dark:text-white">🙋🏼‍♀️ FiFi - Fynd Seller Support Assistant</h1>
-                <button 
-                    @click="darkMode = !darkMode" 
-                    class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
-                >
-                    <svg x-show="!darkMode" class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
-                    </svg>
-                    <svg x-show="darkMode" class="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707"/>
-                    </svg>
-                </button>
-            </div>
-        </header>
+    <div class="min-h-screen flex">
+        <!-- Sidebar -->
+        <aside class="w-64 p-4 sticky top-0 h-screen overflow-y-auto">
+            <h2 class="text-lg font-semibold mb-4">Conversations</h2>
+            <ul id="conversationList" class="space-y-2">
+                <!-- Example conversation item -->
+                <li class="flex justify-between items-center">
+                    <span>Conversation ID</span>
+                    <button class="text-red-500 hover:text-red-700" onclick="deleteConversation('conversation_id')">Delete</button>
+                </li>
+                <!-- More conversation items will be inserted here -->
+            </ul>
+        </aside>
 
-        <!-- Chat Container -->
-        <div class="container mx-auto px-4 pt-20 pb-24">
-            <div id="messageContainer" class="message-container space-y-4 pb-4">
-                <!-- Messages will be inserted here -->
-            </div>
-        </div>
-
-        <!-- Input Form -->
-        <form id="chatForm" class="fixed bottom-0 w-full bg-white dark:bg-gray-800 border-t dark:border-gray-700 transition-colors duration-200">
-            <div class="container mx-auto px-4 py-4">
-                <div class="flex gap-4">
-                    <input 
-                        type="text" 
-                        name="message" 
-                        placeholder="Type your message..." 
-                        class="flex-1 rounded-lg border dark:border-gray-600 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition-colors duration-200"
-                        required
-                    >
+        <!-- Main Content -->
+        <div class="flex-1">
+            <!-- Header -->
+            <header class="fixed w-full top-0 z-10 border-b dark:border-gray-700 bg-white dark:bg-gray-800 transition-colors duration-200">
+                <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+                    <h1 class="text-xl font-semibold text-gray-800 dark:text-white">🙋🏼‍♀️ FiFi - Fynd Seller Support Assistant</h1>
                     <button 
-                        type="submit" 
-                        class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition-colors duration-200"
+                        @click="darkMode = !darkMode" 
+                        class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
                     >
-                        Send
+                        <svg x-show="!darkMode" class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+                        </svg>
+                        <svg x-show="darkMode" class="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707"/>
+                        </svg>
                     </button>
                 </div>
+            </header>
+
+            <!-- Chat Container -->
+            <div class="container mx-auto px-4 pt-20 pb-24">
+                <div id="messageContainer" class="message-container space-y-4 pb-4">
+                    <!-- Render messages from the server -->
+                    {% for message in messages %}
+                        <div class="message {{ message.role }}">
+                            <div class="prose dark:prose-invert">{{ message.content | safe }}</div>
+                        </div>
+                    {% endfor %}
+                </div>
             </div>
-        </form>
+
+            <!-- Input Form -->
+            <form id="chatForm" class="fixed bottom-0 w-full bg-white dark:bg-gray-800 border-t dark:border-gray-700 transition-colors duration-200">
+                <div class="container mx-auto px-4 py-4">
+                    <div class="flex gap-4">
+                        <input 
+                            type="text" 
+                            name="message" 
+                            placeholder="Type your message..." 
+                            class="flex-1 rounded-lg border dark:border-gray-600 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition-colors duration-200"
+                            required
+                        >
+                        <button 
+                            type="submit" 
+                            class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition-colors duration-200"
+                        >
+                            Send
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
     </div>
 
     <script src="https://unpkg.com/alpinejs" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
     <script>
+        // Function to get query params from URL
+        function getQueryParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+
+        // Store company_id in localStorage if present in the URL
+        const companyId = getQueryParam('company_id');
+        if (companyId) {
+            localStorage.setItem('company_id', companyId);
+        }
+
+        // Store conversation_id in localStorage if present in the URL
+        const conversationId = getQueryParam('conversation_id');
+        if (conversationId) {
+            localStorage.setItem('conversation_id', conversationId);
+        }
+
         document.getElementById('chatForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const form = e.target;
             const input = form.querySelector('input[name="message"]');
-            const message = input.value;
+            const message = input.value.trim();
             input.value = '';
 
-            const container = document.getElementById('messageContainer');
-            let currentAssistantMessage = null;
+            if (!message) return;
 
-            const response = await fetch('/chat', {
+            const container = document.getElementById('messageContainer');
+
+            // Get conversation_id from localStorage
+            const storedCompanyId = localStorage.getItem('company_id') || '';
+            const storedConversationId = localStorage.getItem('conversation_id') || '';
+
+            // Function to render messages safely
+            function renderMessage(content, sender) {
+                const sanitizedHTML = marked.parse(content); // Convert Markdown to safe HTML
+                const messageHTML = `
+                    <div class="message ${sender}">
+                        <div class="prose dark:prose-invert">${sanitizedHTML}</div>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', messageHTML);
+                window.scrollTo(0, document.body.scrollHeight);
+            }
+
+            // Render user message
+            renderMessage(message, 'user');
+
+            // Fetch response from server
+            const response = await fetch(`/chat?conversation_id=${storedConversationId}&company_id=${storedCompanyId}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -114,26 +187,63 @@
 
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
+            let assistantMessage = '';
 
             while (true) {
-                const {value, done} = await reader.read();
-                if (done) break;
+                const { value, done } = await reader.read();
+                if (done) {
+                    // Render assistant's message at the end
+                    renderMessage(assistantMessage, 'assistant');
+                    break;
+                }
                 
                 const text = decoder.decode(value);
-                if (text.startsWith('<div class="message')) {
-                    // This is a new message container
-                    container.insertAdjacentHTML('beforeend', text);
-                } else {
-                    // This is content for the assistant message
-                    const assistantMessages = container.getElementsByClassName('message assistant');
-                    const lastAssistantMessage = assistantMessages[assistantMessages.length - 1];
-                    if (lastAssistantMessage) {
-                        lastAssistantMessage.innerHTML += text;
-                    }
-                }
-                window.scrollTo(0, document.body.scrollHeight);
+                assistantMessage += text;
             }
         });
+
+        async function deleteConversation(conversationId) {
+            try {
+                const response = await fetch(`/conversation?conversation_id=${conversationId}`, {
+                    method: 'DELETE',
+                });
+
+                if (response.ok) {
+                    alert('Conversation deleted successfully');
+                    fetchConversations(); // Refresh the conversation list
+                } else {
+                    alert('Failed to delete conversation');
+                }
+            } catch (error) {
+                console.error('Error deleting conversation:', error);
+            }
+        }
+
+        async function fetchConversations() {
+            try {
+                const companyId = localStorage.getItem('company_id');
+                if (!companyId) return;
+
+                const response = await fetch(`/get-chats?company_id=${companyId}`);
+                const conversationIds = await response.json();
+                const conversationList = document.getElementById('conversationList');
+                conversationList.innerHTML = '';
+
+                conversationIds.forEach(conversation => {
+                    const listItem = document.createElement('li');
+                    listItem.className = 'flex justify-between items-center';
+                    listItem.innerHTML = `
+                        <a href="/home?company_id=${companyId}&conversation_id=${conversation}" class="block p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700">${conversation}</a>
+                        <button class="text-red-500 hover:text-red-700" onclick="deleteConversation('${conversation}')">🗑️</button>
+                    `;
+                    conversationList.appendChild(listItem);
+                });
+            } catch (error) {
+                console.error('Error fetching conversations:', error);
+            }
+        }
+        // Fetch conversations on page load
+        document.addEventListener('DOMContentLoaded', fetchConversations);
     </script>
 </body>
-</html> 
+</html>

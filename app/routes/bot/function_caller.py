@@ -68,10 +68,7 @@ def call_api(function_name, params, company_id, oauth_token):
 
     # Make the GET request
     try:
-        print("REQUEST URL: ", url)
-        # print("PAYLOAD: ", new_params)
         response = requests.get(url, headers=headers)
-        print("RESPONSE: ", response.json())
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:
@@ -99,8 +96,6 @@ def process_openai_function_call(user_query, company_id, oauth_token):
     # Extract function call outputs
     function_calls = completion.choices[0].message.tool_calls
 
-    print("FUNCTION CALLS", function_calls)
-
     # Process the function call results
     results = []
     for call in function_calls:
@@ -110,12 +105,3 @@ def process_openai_function_call(user_query, company_id, oauth_token):
         results.append(call_api(function_name, arguments, company_id, oauth_token))
 
     return results
-
-
-# Example usage
-# if __name__ == "__main__":
-#     user_input = "What are all the bags for shipment id 6969 and 4269?"
-#     company_id = 9668
-#     access_token="oa-8fd5450a23f0e54e168751a662b0e6bc0e3a3deb"
-#     function_results = process_openai_function_call(user_input, company_id, access_token)
-#     print(function_results)

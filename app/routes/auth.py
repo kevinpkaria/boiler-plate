@@ -33,7 +33,6 @@ async def handle_install(
     company_id: str, client_id: str, cluster_url: str, db: Session = Depends(get_db)
 ):
     state = secrets.token_urlsafe(16)
-    print("\n\n", Config.EXTENSION_URL, "\n\n")
     auth_url = (
         f"{Config.BASE_URL}/service/panel/authentication/v1.0/company/{company_id}/oauth/authorize"
         f"?client_id={Config.API_KEY}"
@@ -91,7 +90,7 @@ async def get_offline_token(company_id: str, code: str, client_id: str, db: Sess
             company.expires_at = expires_at
             company.scope = ",".join(token_data["scope"])
             db.commit()
-            return RedirectResponse(url=Config.EXTENSION_URL)
+            return RedirectResponse(url=f"{Config.EXTENSION_URL}/home?company_id={company_id}")
         else:
             raise HTTPException(
                 status_code=response.status_code, detail="Token generation failed"
@@ -99,10 +98,10 @@ async def get_offline_token(company_id: str, code: str, client_id: str, db: Sess
 
 
 @router.get("/refresh")
-async def refresh_token(company_id: str, client_id: str, db: Session = Depends(get_db)):
+async def refresh_token(company_id: str, client_id: str = Config.API_KEY, db: Session = Depends(get_db)):
     company = (
         db.query(Company)
-        .filter(Company.client_id == client_id, Company.company_id == company_id)
+        .filter(Company.company_id == company_id)
         .first()
     )
     if not company or not company.refresh_token:
@@ -125,20 +124,21 @@ async def refresh_token(company_id: str, client_id: str, db: Session = Depends(g
             headers=headers,
             json=payload,
         )
-        if response.status_code == 200:
-            token_data = response.json()
-            expires_at = datetime.utcnow() + timedelta(seconds=token_data["expires_in"])
-            company.access_token = token_data["access_token"]
-            company.refresh_token = token_data.get(
-                "refresh_token", company.refresh_token
-            )
-            company.expires_at = expires_at
-            db.commit()
-            return RedirectResponse(url=Config.EXTENSION_URL)
-        else:
+        if response.status_code != 200:
             raise HTTPException(
                 status_code=response.status_code, detail="Token refresh failed"
             )
+        token_data = response.json()
+        expires_at = datetime.utcnow() + timedelta(seconds=token_data["expires_in"])
+        company.access_token = token_data["access_token"]
+        company.refresh_token = token_data.get(
+            "refresh_token", company.refresh_token
+        )
+        company.expires_at = expires_at
+        db.commit()
+        token_data["company_id"] = company_id
+        token_data["client_id"] = client_id
+        return token_data
 
 
 @router.get("/test")
