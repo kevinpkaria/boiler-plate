@@ -62,7 +62,10 @@ async def create_conversation(company_id: int):
 
     async with httpx.AsyncClient() as client:
         response = await client.post(
-            url, headers=headers, json=data, timeout=httpx.Timeout(TIMEOUT_SECONDS, read=None)
+            url,
+            headers=headers,
+            json=data,
+            timeout=httpx.Timeout(TIMEOUT_SECONDS, read=None),
         )
         response.raise_for_status()  # Raise an error for bad responses
         return response.json()

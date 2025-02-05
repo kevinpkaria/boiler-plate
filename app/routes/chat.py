@@ -41,7 +41,11 @@ async def chat_page(
             url=f"{Config.EXTENSION_URL}/new-chat?company_id={company_id}"
         )
 
-    conversation = db.query(Conversation).filter(Conversation.conversation_id == conversation_id).first()
+    conversation = (
+        db.query(Conversation)
+        .filter(Conversation.conversation_id == conversation_id)
+        .first()
+    )
     if not conversation:
         raise HTTPException(status_code=404, detail="Conversation not found")
 
@@ -65,7 +69,9 @@ async def new_chat(company_id: str, db: Session = Depends(get_db)):
 
     response = await create_conversation(company_id)
     conversation_id = response["id"]
-    conversation = Conversation(conversation_id=conversation_id, company_id=company_id, title="New Chat")
+    conversation = Conversation(
+        conversation_id=conversation_id, company_id=company_id, title="New Chat"
+    )
     db.add(conversation)
     db.commit()
     return RedirectResponse(
@@ -93,7 +99,10 @@ async def get_chats(company_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Conversation not found")
     # Get all conversation ids for the company
     conversations = company.conversations
-    return [{"id": conversation.conversation_id, "title": conversation.title} for conversation in conversations]
+    return [
+        {"id": conversation.conversation_id, "title": conversation.title}
+        for conversation in conversations
+    ]
 
 
 @router.delete("/conversation")
