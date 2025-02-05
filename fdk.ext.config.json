@@ -1,5 +1,0 @@
-{
-    "roles": ["backend"],
-    "install": "npm i",
-    "dev": "npm run start:dev"
-}

@@ -33,6 +33,7 @@ async def handle_install(
     company_id: str, client_id: str, cluster_url: str, db: Session = Depends(get_db)
 ):
     state = secrets.token_urlsafe(16)
+    print("\n\n", Config.EXTENSION_URL, "\n\n")
     auth_url = (
         f"{Config.BASE_URL}/service/panel/authentication/v1.0/company/{company_id}/oauth/authorize"
         f"?client_id={Config.API_KEY}"

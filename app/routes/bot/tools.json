@@ -1,0 +1,219 @@
+[
+    {
+        "type": "function",
+        "function": {
+            "name": "list_bag_cancellation_reasons",
+            "description": "Get reasons to perform full or partial cancellation of a bag.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "shipment_id": {
+                        "type": "string",
+                        "description": "ID of the shipment. An order may contain multiple items and may get divided into one or more shipments, each having its own ID."
+                    },
+                    "bag_id": {
+                        "type": "string",
+                        "description": "ID of the bag. An order may contain multiple items and may get divided into one or more shipments, each having its own ID."
+                    },
+                    "state": {
+                        "type": "string",
+                        "description": "State for which cancellation reasons are required."
+                    }
+                },
+                "required": [
+                    "shipment_id",
+                    "bag_id",
+                    "state"
+                ],
+                "additionalProperties": false
+            },
+            "strict": true
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_bag",
+            "description": "Retrieve detailed information about a specific bag.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "bag_id": {
+                        "type": "string",
+                        "description": "Unique identifier of a bag."
+                    }
+                },
+                "required": [
+                    "bag_id"
+                ],
+                "additionalProperties": false
+            },
+            "strict": true
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "list_bags",
+            "description": "Get a paginated list of bags based on provided filters.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "bag_ids": {
+                        "type": "string",
+                        "description": "Comma-separated values of bag IDs."
+                    }
+                },
+                "required": [
+                    "bag_ids"
+                ],
+                "additionalProperties": false
+            },
+            "strict": true
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_channel_configuration",
+            "description": "Retrieve configuration settings specific to orders for a channel.",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "additionalProperties": false
+            },
+            "strict": true
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_order",
+            "description": "Get detailed information about a specific order.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "order_id": {
+                        "type": "string",
+                        "description": "Unique identifier of the order."
+                    }
+                },
+                "required": [
+                    "order_id"
+                ],
+                "additionalProperties": false
+            },
+            "strict": true
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "list_orders",
+            "description": "Get a list of orders based on the filters provided.",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "additionalProperties": false
+            },
+            "strict": true
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_esm_config",
+            "description": "Retrieve the Entity State Manager (ESM) configuration, including flags, hooks, and filters, for a specific application within a company's setup.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "app_id": {
+                        "type": "string",
+                        "description": "The unique identifier of the application."
+                    }
+                },
+                "required": [
+                    "app_id"
+                ],
+                "additionalProperties": false
+            },
+            "strict": true
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_shipment_history",
+            "description": "Retrieve the history of a shipment, including status updates and related events.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "shipment_id": {
+                        "type": "string",
+                        "description": "Identifier for the shipment."
+                    }
+                },
+                "required": [
+                    "shipment_id"
+                ],
+                "additionalProperties": false
+            },
+            "strict": true
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "track_shipment",
+            "description": "Retrieve courier partner tracking details for a given shipment ID or AWB number.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "shipment_id": {
+                        "type": "string",
+                        "description": "Unique identifier of a shipment on the platform."
+                    }
+                },
+                "required": [
+                    "shipment_id"
+                ],
+                "additionalProperties": false
+            },
+            "strict": true
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "list_shipments",
+            "description": "Get a list of shipments based on the filters provided.",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "additionalProperties": false
+            },
+            "strict": true
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_shipment_details",
+            "description": "Get detailed information about a specific shipment.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "shipment_id": {
+                        "type": "string",
+                        "description": "The unique identifier for a shipment."
+                    }
+                },
+                "required": [
+                    "shipment_id"
+                ],
+                "additionalProperties": false
+            },
+            "strict": true
+        }
+    }
+]
