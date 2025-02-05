@@ -1,68 +1,80 @@
+# Fynd Platform Assistant
 
-# Build a Fynd Extension using Node.js + React.js
-![NodeJS](https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white)
-![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
+This repository contains a FastAPI application that serves as a Fynd Platform Assistant. It provides a chat interface for users to interact with an AI assistant, as well as OAuth routes for authentication with the Fynd API.
 
-[![Coverage Status][coveralls-badge]]([coveralls-url])
+## Architecture
 
-This project outlines the development process for a Fynd extension that displays product listings for a company and its associated applications. By following this guide, you'll be able to set up the development environment, build the extension locally, and understand the testing procedures.
+The application is structured as follows:
 
-## Quick start
+- **FastAPI**: The main web framework used to build the application. It handles HTTP requests and responses.
+- **OpenAI API**: Used to generate responses for the chat interface. The application streams responses from the OpenAI model.
+- **SQLAlchemy**: Used for ORM (Object-Relational Mapping) to interact with the SQLite database. It manages `MerchantToken` and `StateStore` models.
+- **HTTPX**: An asynchronous HTTP client used for making requests to external APIs, such as the Fynd API.
+- **Jinja2**: Used for rendering HTML templates for the chat interface.
+- **Environment Variables**: Managed using `python-dotenv` to load configuration settings from a `.env` file.
+
+### Key Components
+
+- **`main.py`**: The main application file containing route definitions and logic for handling chat and OAuth flows.
+- **`models.py`**: Defines the database models and sets up the SQLite database.
+- **`templates/chat.html`**: The HTML template for the chat interface, styled with Tailwind CSS.
+- **`run.sh`**: A shell script to start the FastAPI server and manage logs.
+
+## Running the Application
+
 ### Prerequisites
-* You have installed globally [Node 18.X.X](https://docs.npmjs.com/) or above version.
-* You have fdk-cli installed [install](https://github.com/gofynd/fdk-cli)
-* You have created a [partner account](https://partners.fynd.com).
-* You have created a [development account](https://partners.fynd.com/help/docs/partners/testing-extension/development-acc#create-development-account) and [populated test data](https://partners.fynd.com/help/docs/partners/testing-extension/development-acc#populate-test-data) in it.
 
-## Install Template Locally
-To initialize your extension template locally, run the following command:
-```shell
-fdk extension init --template node-react
-```
-Enter your preferred extension name and type, and you are all set.
-
-## Local Development
-To start local development, execute the following command:
-```shell
-fdk extension preview
-```
-This command will provide a partner’s panel URL where you can interact with your extension. For more information, please read this [guide](https://github.com/gofynd/fdk-cli?tab=readme-ov-file#extension-commands).
-
-## Docker Instructions
-
-To run the application using Docker in Production environment, follow these steps:
-* Build the Docker image:
-    ```shell
-    docker build -t extension .
-    ```
-* Run the Docker container
-  ```
-  docker run -p 8080:8080 extension 
-  ```
-
-To Run the extension with Docker locally, ensure you first prepare your environment:
-
-- Copy the .env.example file and rename it to .env at the root of your project.
-- Fill in all the required values in the .env file.
-
-After setting up your .env file, you can proceed with the Docker commands listed above to build and run your extension locally. 
-
-## Database Configuration
-
-By default, this template uses an `SQLite` database to store session data. SQLite is sufficient for development purpose only, it may not be suitable for all production scenarios. The best database for your application depends on your data requirements and query patterns.
-
-If your app requires a more robust database solution, you can easily extend the base storage class provided by the `fdk-extension-javascript` library to use a database of your choice for session data. Here are some databases that we support by default:
-
+- Python 3.8 or higher
 - SQLite
-- Memory Storage
-- Redis
+- An OpenAI API key
 
-Feel free to configure and run your preferred database on your server to meet your specific needs.
+### Setup Instructions
 
-## Tech Stack
-1. [fdk-client-javascript](https://github.com/gofynd/fdk-client-javascript): This library contains all the methods to call Fynd platform APIs.
-2. [fdk-extension-javascript](https://github.com/gofynd/fdk-extension-javascript): This library streamlines the setup of authentication for accessing Fynd Platform APIs. It also simplifies the process of subscribing to webhooks for receiving real-time notifications.
+1. **Clone the Repository**
 
+   ```bash
+   git clone <repository-url>
+   cd <repository-directory>
+   ```
 
-[coveralls-badge]: https://coveralls.io/repos/github/gofynd/example-extension-javascript-react/badge.svg?branch=main&&kill_cache=1
-[coveralls-url]: https://coveralls.io/github/gofynd/example-extension-javascript-react?branch=main
+2. **Install Dependencies**
+
+   Use `pip` to install the required Python packages:
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. **Set Up Environment Variables**
+
+   Create a `.env` file in the root directory and add the following variables:
+
+   ```
+   OPENAI_API_KEY=your_openai_api_key
+   FYND_API_KEY=your_fynd_api_key
+   FYND_API_SECRET=your_fynd_api_secret
+   EXTENSION_URL=your_extension_url
+   ```
+
+4. **Run the Application**
+
+   Use the provided `run.sh` script to start the FastAPI server:
+
+   ```bash
+   ./run.sh
+   ```
+
+   This script will start the server and log output to `logs/backend.log`.
+
+5. **Access the Application**
+
+   Open your web browser and navigate to `http://localhost:8000` to access the chat interface.
+
+### Additional Information
+
+- **Logs**: Logs are stored in the `logs` directory. Use `tail -f logs/backend.log` to view logs in real-time.
+- **Stopping the Server**: Use `kill $(cat logs/backend.pid)` to stop the server.
+
+## License
+
+This project is licensed under the MIT License. See the `LICENSE` file for more details.
