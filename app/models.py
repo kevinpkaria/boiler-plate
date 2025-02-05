@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, create_engine
@@ -5,7 +6,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 
 Base = declarative_base()
-engine = create_engine("sqlite:///fynd_oauth.db", echo=True)
+engine = create_engine(os.getenv("DATABASE_URL"), echo=True)
 SessionLocal = sessionmaker(bind=engine)
 
 
