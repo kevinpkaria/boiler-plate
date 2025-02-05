@@ -1,21 +1,24 @@
+import base64
 import os
-from fastapi import APIRouter, HTTPException, Depends
+import secrets
+from datetime import datetime, timedelta
+
+import httpx
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
-import base64
-import httpx
-from datetime import datetime, timedelta
-import secrets
 
 from app.models import Company, SessionLocal
 
 router = APIRouter()
 
+
 class Config:
     API_KEY = os.getenv("FYND_API_KEY")
     API_SECRET = os.getenv("FYND_API_SECRET")
     EXTENSION_URL = os.getenv("EXTENSION_URL")
-    BASE_URL = "https://api.fynd.com"
+    BASE_URL = os.getenv("BASE_URL")
+
 
 def get_db():
     db = SessionLocal()
@@ -24,8 +27,11 @@ def get_db():
     finally:
         db.close()
 
+
 @router.get("/fp/install")
-async def handle_install(company_id: str, client_id: str, cluster_url: str, db: Session = Depends(get_db)):
+async def handle_install(
+    company_id: str, client_id: str, cluster_url: str, db: Session = Depends(get_db)
+):
     state = secrets.token_urlsafe(16)
     auth_url = (
         f"{Config.BASE_URL}/service/panel/authentication/v1.0/company/{company_id}/oauth/authorize"
@@ -37,12 +43,22 @@ async def handle_install(company_id: str, client_id: str, cluster_url: str, db: 
     )
     return RedirectResponse(url=auth_url)
 
+
 @router.get("/fp/auth")
-async def handle_auth(code: str, state: str, client_id: str, company_id: str, db: Session = Depends(get_db)):
+async def handle_auth(
+    code: str,
+    state: str,
+    client_id: str,
+    company_id: str,
+    db: Session = Depends(get_db),
+):
     return await get_offline_token(company_id, code, client_id, db)
 
+
 async def get_offline_token(company_id: str, code: str, client_id: str, db: Session):
-    auth_string = base64.b64encode(f"{Config.API_KEY}:{Config.API_SECRET}".encode()).decode()
+    auth_string = base64.b64encode(
+        f"{Config.API_KEY}:{Config.API_SECRET}".encode()
+    ).decode()
     headers = {
         "Authorization": f"Basic {auth_string}",
         "Content-Type": "application/json",
@@ -76,14 +92,23 @@ async def get_offline_token(company_id: str, code: str, client_id: str, db: Sess
             db.commit()
             return RedirectResponse(url=Config.EXTENSION_URL)
         else:
-            raise HTTPException(status_code=response.status_code, detail="Token generation failed")
+            raise HTTPException(
+                status_code=response.status_code, detail="Token generation failed"
+            )
+
 
 @router.get("/refresh")
 async def refresh_token(company_id: str, client_id: str, db: Session = Depends(get_db)):
-    company = db.query(Company).filter(Company.client_id == client_id, Company.company_id == company_id).first()
+    company = (
+        db.query(Company)
+        .filter(Company.client_id == client_id, Company.company_id == company_id)
+        .first()
+    )
     if not company or not company.refresh_token:
         raise HTTPException(status_code=400, detail="No refresh token available")
-    auth_string = base64.b64encode(f"{Config.API_KEY}:{Config.API_SECRET}".encode()).decode()
+    auth_string = base64.b64encode(
+        f"{Config.API_KEY}:{Config.API_SECRET}".encode()
+    ).decode()
     headers = {
         "Authorization": f"Basic {auth_string}",
         "Content-Type": "application/json",
@@ -103,24 +128,27 @@ async def refresh_token(company_id: str, client_id: str, db: Session = Depends(g
             token_data = response.json()
             expires_at = datetime.utcnow() + timedelta(seconds=token_data["expires_in"])
             company.access_token = token_data["access_token"]
-            company.refresh_token = token_data.get("refresh_token", company.refresh_token)
+            company.refresh_token = token_data.get(
+                "refresh_token", company.refresh_token
+            )
             company.expires_at = expires_at
             db.commit()
             return RedirectResponse(url=Config.EXTENSION_URL)
         else:
-            raise HTTPException(status_code=response.status_code, detail="Token refresh failed")
+            raise HTTPException(
+                status_code=response.status_code, detail="Token refresh failed"
+            )
+
 
 @router.get("/test")
 async def test_api(company_id: str, client_id: str, db: Session = Depends(get_db)):
     company = db.query(Company).filter(Company.client_id == client_id).first()
     if not company or not company.access_token:
         raise HTTPException(status_code=401, detail="No access token available")
-    headers = {
-        "Authorization": f"Bearer {company.access_token}"
-    }
+    headers = {"Authorization": f"Bearer {company.access_token}"}
     async with httpx.AsyncClient() as client:
         response = await client.get(
             f"{Config.BASE_URL}/service/platform/order/v1.0/company/{company_id}/shipments-listing",
-            headers=headers
+            headers=headers,
         )
         return response.json()

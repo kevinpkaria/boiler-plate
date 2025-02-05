@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Form, Depends, Request
-from fastapi.responses import StreamingResponse, HTMLResponse
-from fastapi.templating import Jinja2Templates
-from sqlalchemy.orm import Session
-from typing import AsyncGenerator
-from openai import OpenAI
 import os
+from typing import AsyncGenerator
+
+from fastapi import APIRouter, Depends, Form, Request
+from fastapi.responses import HTMLResponse, StreamingResponse
+from fastapi.templating import Jinja2Templates
+from openai import OpenAI
+from sqlalchemy.orm import Session
 
 from app.models import SessionLocal
 
@@ -14,6 +15,7 @@ llm = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 router = APIRouter()
 
+
 def get_db():
     db = SessionLocal()
     try:
@@ -21,9 +23,11 @@ def get_db():
     finally:
         db.close()
 
+
 @router.get("/", response_class=HTMLResponse)
 async def chat_page(request: Request):
     return templates.TemplateResponse("chat.html", {"request": request})
+
 
 @router.post("/chat")
 async def chat(message: str = Form(...), db: Session = Depends(get_db)):
@@ -36,15 +40,15 @@ async def chat(message: str = Form(...), db: Session = Depends(get_db)):
                 model="gpt-4o",
                 messages=[
                     {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": message}
+                    {"role": "user", "content": message},
                 ],
                 max_tokens=1024,
-                stream=True
+                stream=True,
             )
             for chunk in stream:
                 if chunk.choices[0].delta.content is not None:
                     yield chunk.choices[0].delta.content
-            yield '</div>'
+            yield "</div>"
         except Exception as e:
             yield f'<div class="message assistant">Error: {str(e)}</div>'
 
@@ -54,6 +58,6 @@ async def chat(message: str = Form(...), db: Session = Depends(get_db)):
         headers={
             "Cache-Control": "no-cache",
             "X-Accel-Buffering": "no",
-            "Content-Type": "text/html; charset=utf-8"
-        }
+            "Content-Type": "text/html; charset=utf-8",
+        },
     )
