@@ -36,5 +36,5 @@ def get_completion_gpt(
         seed=seed,
         tool_choice=tool_choice,
     )
-    logger.info(f"[INFO] >>> GPT_4o call usage : {response.to_dict()}")
+    print(f"[INFO] >>> GPT_4o call usage : {response.to_dict()}")
     return response.choices[0].message.content
