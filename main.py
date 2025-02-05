@@ -15,7 +15,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from openai import OpenAI
 
-from models import MerchantToken, SessionLocal, StateStore
+from models import Company, SessionLocal
 
 load_dotenv()
 
@@ -104,11 +104,6 @@ async def handle_install(
     # Generate state parameter
     state = secrets.token_urlsafe(16)
 
-    # Store state and installation parameters
-    state_entry = StateStore(state=state, company_id=company_id, client_id=client_id)
-    db.add(state_entry)
-    db.commit()
-
     # Construct authorization URL
     auth_url = (
         f"{Config.BASE_URL}/service/panel/authentication/v1.0/company/{company_id}/oauth/authorize"
@@ -129,26 +124,10 @@ async def handle_auth(
     company_id: str,
     db: Session = Depends(get_db),
 ):
-    # Validate state and client_id
-    state_entry = (
-        db.query(StateStore)
-        .filter(
-            StateStore.state == state,
-            StateStore.client_id == client_id,
-            StateStore.company_id == company_id,
-        )
-        .first()
-    )
-
-    if not state_entry:
-        raise HTTPException(
-            status_code=400, detail="Invalid state or client parameters"
-        )
-
-    # Update state entry with auth code
-    state_entry.auth_code = code
-    db.commit()
-
+    print(f"\n\n{code=}")
+    print(f"\n\n{state=}")
+    print(f"\n\n{client_id=}")
+    print(f"\n\n{company_id=}")
     # Get offline token
     return await get_offline_token(company_id, code, client_id, db)
 
@@ -182,25 +161,28 @@ async def get_offline_token(company_id: str, code: str, client_id: str, db: Sess
             token_data = response.json()
             expires_at = datetime.utcnow() + timedelta(seconds=token_data["expires_in"])
 
-            # Store or update merchant token
-            merchant_token = (
-                db.query(MerchantToken)
-                .filter(MerchantToken.client_id == client_id)
+            # Store or update company token
+            company = (
+                db.query(Company)
+                .filter(Company.client_id == client_id)
                 .first()
             )
 
-            if not merchant_token:
-                merchant_token = MerchantToken(
+            if not company:
+                company = Company(
                     company_id=company_id, client_id=client_id
                 )
-                db.add(merchant_token)
+                db.add(company)
 
-            merchant_token.access_token = token_data["access_token"]
-            merchant_token.refresh_token = token_data.get("refresh_token")
-            merchant_token.token_type = token_data["token_type"]
-            merchant_token.expires_at = expires_at
-            merchant_token.scope = ",".join(token_data["scope"])
+            company.auth_code = code
+            company.access_token = token_data["access_token"]
+            company.refresh_token = token_data.get("refresh_token")
+            company.token_type = token_data["token_type"]
+            company.expires_at = expires_at
+            company.scope = ",".join(token_data["scope"])
             db.commit()
+            for c in company.__table__.columns:
+                print(f"{c.name}: {getattr(company, c.name)}")
             return RedirectResponse(url=Config.EXTENSION_URL)
         else:
             raise HTTPException(
@@ -210,21 +192,15 @@ async def get_offline_token(company_id: str, code: str, client_id: str, db: Sess
 
 @app.get("/refresh")
 async def refresh_token(company_id: str, client_id: str, db: Session = Depends(get_db)):
-    merchant_token = (
-        db.query(MerchantToken)
+    company = (
+        db.query(Company)
         .filter(
-            MerchantToken.client_id == client_id, MerchantToken.company_id == company_id
+            Company.client_id == client_id, Company.company_id == company_id
         )
         .first()
     )
 
-    state_store = (
-        db.query(StateStore)
-        .filter(StateStore.client_id == client_id, StateStore.company_id == company_id)
-        .first()
-    )
-
-    if not merchant_token or not merchant_token.refresh_token:
+    if not company or not company.refresh_token:
         raise HTTPException(status_code=400, detail="No refresh token available")
 
     auth_string = base64.b64encode(
@@ -238,11 +214,14 @@ async def refresh_token(company_id: str, client_id: str, db: Session = Depends(g
 
     payload = {
         "grant_type": "refresh_token",
-        "code": state_store.auth_code,
-        "refresh_token": merchant_token.refresh_token,
+        "code": company.auth_code,
+        "refresh_token": company.refresh_token,
     }
 
     async with httpx.AsyncClient() as client:
+        print(f"\n\n{Config.BASE_URL}/service/panel/authentication/v1.0/company/{company_id}/oauth/offline-token")
+        print(f"\n\n{headers=}")
+        print(f"\n\n{payload=}")
         response = await client.post(
             f"{Config.BASE_URL}/service/panel/authentication/v1.0/company/{company_id}/oauth/offline-token",
             headers=headers,
@@ -253,11 +232,11 @@ async def refresh_token(company_id: str, client_id: str, db: Session = Depends(g
             token_data = response.json()
             expires_at = datetime.utcnow() + timedelta(seconds=token_data["expires_in"])
 
-            merchant_token.access_token = token_data["access_token"]
-            merchant_token.refresh_token = token_data.get(
-                "refresh_token", merchant_token.refresh_token
+            company.access_token = token_data["access_token"]
+            company.refresh_token = token_data.get(
+                "refresh_token", company.refresh_token
             )
-            merchant_token.expires_at = expires_at
+            company.expires_at = expires_at
             db.commit()
             return RedirectResponse(url=Config.EXTENSION_URL)
         else:
@@ -268,14 +247,14 @@ async def refresh_token(company_id: str, client_id: str, db: Session = Depends(g
 
 @app.get("/test")
 async def test_api(company_id: str, client_id: str, db: Session = Depends(get_db)):
-    merchant_token = (
-        db.query(MerchantToken).filter(MerchantToken.client_id == client_id).first()
+    company = (
+        db.query(Company).filter(Company.client_id == client_id).first()
     )
 
-    if not merchant_token or not merchant_token.access_token:
+    if not company or not company.access_token:
         raise HTTPException(status_code=401, detail="No access token available")
 
-    headers = {"Authorization": f"Bearer {merchant_token.access_token}"}
+    headers = {"Authorization": f"Bearer {company.access_token}"}
 
     async with httpx.AsyncClient() as client:
         response = await client.get(
