@@ -11,7 +11,7 @@ echo "" > logs/backend.log
 
 # Start backend with proper logging
 echo "Starting backend server..."
-uvicorn main:app --reload --log-level debug > logs/backend.log 2>&1 &
+uvicorn main:app --reload --log-level debug --port 8000 > logs/backend.log 2>&1 &
 BACKEND_PID=$!
 
 # Save PID for later use
