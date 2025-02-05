@@ -90,7 +90,9 @@ async def get_offline_token(company_id: str, code: str, client_id: str, db: Sess
             company.expires_at = expires_at
             company.scope = ",".join(token_data["scope"])
             db.commit()
-            return RedirectResponse(url=f"{Config.EXTENSION_URL}/home?company_id={company_id}")
+            return RedirectResponse(
+                url=f"{Config.EXTENSION_URL}/home?company_id={company_id}"
+            )
         else:
             raise HTTPException(
                 status_code=response.status_code, detail="Token generation failed"
@@ -98,12 +100,10 @@ async def get_offline_token(company_id: str, code: str, client_id: str, db: Sess
 
 
 @router.get("/refresh")
-async def refresh_token(company_id: str, client_id: str = Config.API_KEY, db: Session = Depends(get_db)):
-    company = (
-        db.query(Company)
-        .filter(Company.company_id == company_id)
-        .first()
-    )
+async def refresh_token(
+    company_id: str, client_id: str = Config.API_KEY, db: Session = Depends(get_db)
+):
+    company = db.query(Company).filter(Company.company_id == company_id).first()
     if not company or not company.refresh_token:
         raise HTTPException(status_code=400, detail="No refresh token available")
     auth_string = base64.b64encode(
@@ -131,9 +131,7 @@ async def refresh_token(company_id: str, client_id: str = Config.API_KEY, db: Se
         token_data = response.json()
         expires_at = datetime.utcnow() + timedelta(seconds=token_data["expires_in"])
         company.access_token = token_data["access_token"]
-        company.refresh_token = token_data.get(
-            "refresh_token", company.refresh_token
-        )
+        company.refresh_token = token_data.get("refresh_token", company.refresh_token)
         company.expires_at = expires_at
         db.commit()
         token_data["company_id"] = company_id
