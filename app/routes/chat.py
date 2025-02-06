@@ -50,12 +50,9 @@ async def chat_page(
     if not conversation:
         raise HTTPException(status_code=404, detail="Conversation not found")
 
-    # Fetch all messages for the given conversation_id
+    # Fetch messages before passing to template
     messages = await get_conversations(conversation_id)
-    if (len(messages) >= 2) and (conversation.title == "New Chat"):
-        conversation.title = generate_summary(messages)
-        db.commit()
-
+    
     # Pass the messages to the template
     return templates.TemplateResponse(
         "chat.html", {"request": request, "messages": messages}
@@ -90,6 +87,15 @@ async def chat(
     response = await process_query(message, conversation_id)
     if not response.get("output"):
         raise HTTPException(status_code=400, detail="Error processing query")
+
+    # Get the conversation and check if title needs to be updated
+    conversation = db.query(Conversation).filter(Conversation.conversation_id == conversation_id).first()
+    if conversation and conversation.title == "New Chat":
+        messages = await get_conversations(conversation_id)
+        if len(messages) >= 2:  # User message + first assistant response
+            conversation.title = generate_summary(messages)
+            db.commit()
+
     return HTMLResponse(response["output"])
 
 

@@ -68,6 +68,7 @@
             /* Dark mode placeholder text */
             --title-text-color: #FFFFFF;
             /* Dark mode title text */
+            --disabled-button-bg: #333333;
         }
 
         body {
@@ -272,15 +273,26 @@
 
             <form id="chatForm" class="pt-4 w-full">
                 <div class="flex items-center gap-4">
-                    <input type="text" name="message" id="voice-input" placeholder="Type your message..."
+                    <input type="text" name="message" id="voice-input" placeholder="Type your message..." autocomplete="off"
                         class="flex-1 rounded-lg border border-black px-4 py-2 focus:outline-none focus:ring-2 focus:ring-gray-400 bg-[var(--input-bg-color)] text-[var(--input-text-color)] transition-colors duration-200"
                         required>
-                    <button id="start-voice" type="button"
-                        class="bg-[var(--button-bg-color)] hover:bg-[var(--button-hover-bg-color)] text-[var(--button-text-color)] px-4 py-2 rounded-lg shadow-md hover:shadow-lg transition-all duration-200">
-                        🎤
+                    <button id="start-voice" type="button" disabled
+                        class="relative group dark:bg-[#333333] bg-gray-200 cursor-not-allowed dark:text-gray-500 text-gray-400 px-4 py-2 rounded-lg shadow-md transition-all duration-200">
+                        <span
+                            class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-sm text-white bg-black rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                            Coming soon
+                        </span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="feather feather-mic">
+                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                            <line x1="12" y1="19" x2="12" y2="23"></line>
+                            <line x1="8" y1="23" x2="16" y2="23"></line>
+                        </svg>
                     </button>
                     <button type="submit"
-                        class="bg-[var(--button-bg-color)] hover:bg-[var(--button-hover-bg-color)] text-[var(--button-text-color)] px-6 py-2 rounded-lg shadow-md hover:shadow-lg transition-all duration-200">
+                        class="bg-[#7f00ff] hover:bg-[#6a00d9] text-white px-6 py-2 rounded-lg shadow-md hover:shadow-lg transition-all duration-200">
                         Send
                     </button>
                 </div>
@@ -327,14 +339,14 @@
 
             // Function to render messages safely
             function renderMessage(content, sender) {
-                const sanitizedHTML = marked.parse(content); // Convert Markdown to safe HTML
+                const sanitizedHTML = marked.parse(content);
                 const messageHTML = `
-                    <div class="message ${sender}">
-                        <div class="prose dark:prose-invert">${sanitizedHTML}</div>
-                    </div>
-                `;
+            <div class="message ${sender}">
+                <div class="prose dark:prose-invert">${sanitizedHTML}</div>
+            </div>
+        `;
                 container.insertAdjacentHTML('beforeend', messageHTML);
-                window.scrollTo(0, document.body.scrollHeight);
+                container.scrollTop = container.scrollHeight;
             }
 
             // Render user message
@@ -358,6 +370,13 @@
                 if (done) {
                     // Render assistant's message at the end
                     renderMessage(assistantMessage, 'assistant');
+
+                    // Count existing messages to check if this was the first message pair
+                    const messageElements = container.querySelectorAll('.message');
+                    if (messageElements.length === 2) { // First pair of messages (user + assistant)
+                        // Refresh the conversation list to show the new title
+                        await fetchConversations();
+                    }
                     break;
                 }
 
@@ -365,7 +384,6 @@
                 assistantMessage += text;
             }
         });
-
         async function deleteConversation(conversationId) {
             try {
                 const response = await fetch(`/conversation?conversation_id=${conversationId}`, {
@@ -398,8 +416,13 @@
                     listItem.className = 'flex items-center space-x-2';
                     listItem.innerHTML = `
                         <a href="/home?company_id=${companyId}&conversation_id=${conversation.id}" class="flex-1 text-sm truncate">${conversation.title}</a>
-                        <button class="flex items-center justify-center bg-[var(--button-bg-color)] hover:bg-[var(--button-hover-bg-color)] text-[var(--button-text-color)] w-10 h-10 rounded-lg transition-colors duration-200" onclick="deleteConversation('${conversation.id}')">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-trash-2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                        <button class="flex items-center justify-center bg-transparent hover:bg-transparent text-[#999999] hover:text-red-500 w-10 h-10 rounded-lg transition-colors duration-200" onclick="deleteConversation('${conversation.id}')">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-trash-2">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                <line x1="10" y1="11" x2="10" y2="17"></line>
+                                <line x1="14" y1="11" x2="14" y2="17"></line>
+                            </svg>
                         </button>
                     `;
                     conversationList.appendChild(listItem);
@@ -473,58 +496,59 @@
             }
         });
 
-        document.getElementById('start-voice').addEventListener('click', function() {
-    // Check if browser supports speech recognition
-    if (!('webkitSpeechRecognition' in window)) {
-        alert('Speech recognition is not supported in this browser. Please use Chrome or Edge.');
-        return;
-    }
+        document.getElementById('start-voice').addEventListener('click', function () {
+            // Check if browser supports speech recognition
+            if (!('webkitSpeechRecognition' in window)) {
+                alert('Speech recognition is not supported in this browser. Please use Chrome or Edge.');
+                return;
+            }
 
-    const recognition = new webkitSpeechRecognition();
-    const voiceButton = document.getElementById('start-voice');
-    const originalButtonText = voiceButton.innerHTML;
+            const recognition = new webkitSpeechRecognition();
+            const voiceButton = document.getElementById('start-voice');
+            const originalButtonText = voiceButton.innerHTML;
 
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.lang = 'en-US';
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
 
-    // Show recording state
-    voiceButton.innerHTML = '🔴';
-    voiceButton.classList.add('animate-pulse');
+            // Show recording state
+            voiceButton.innerHTML = '🔴';
+            voiceButton.classList.add('animate-pulse');
 
-    recognition.start();
+            recognition.start();
 
-    recognition.onresult = function(event) {
-        const transcript = event.results[0][0].transcript;
-        document.getElementById('voice-input').value = transcript;
-        // Reset button state
-        voiceButton.innerHTML = originalButtonText;
-        voiceButton.classList.remove('animate-pulse');
-    };
+            recognition.onresult = function (event) {
+                const transcript = event.results[0][0].transcript;
+                document.getElementById('voice-input').value = transcript;
+                // Reset button state
+                voiceButton.innerHTML = originalButtonText;
+                voiceButton.classList.remove('animate-pulse');
+            };
 
-    recognition.onerror = function(event) {
-        console.error('Speech recognition error:', event.error);
-        alert('Error occurred during speech recognition. Please try again.');
-        // Reset button state
-        voiceButton.innerHTML = originalButtonText;
-        voiceButton.classList.remove('animate-pulse');
-    };
+            recognition.onerror = function (event) {
+                console.error('Speech recognition error:', event.error);
+                alert('Error occurred during speech recognition. Please try again.');
+                // Reset button state
+                voiceButton.innerHTML = originalButtonText;
+                voiceButton.classList.remove('animate-pulse');
+            };
 
-    recognition.onend = function() {
-        // Reset button state
-        voiceButton.innerHTML = originalButtonText;
-        voiceButton.classList.remove('animate-pulse');
-    };
+            recognition.onend = function () {
+                // Reset button state
+                voiceButton.innerHTML = originalButtonText;
+                voiceButton.classList.remove('animate-pulse');
+            };
 
-    // Add timeout to stop recording after 10 seconds
-    setTimeout(() => {
-        if (voiceButton.classList.contains('animate-pulse')) {
-            recognition.stop();
-            voiceButton.innerHTML = originalButtonText;
-            voiceButton.classList.remove('animate-pulse');
-        }
-    }, 10000);
-});
+            // Add timeout to stop recording after 10 seconds
+            setTimeout(() => {
+                if (voiceButton.classList.contains('animate-pulse')) {
+                    recognition.stop();
+                    voiceButton.innerHTML = originalButtonText;
+                    voiceButton.classList.remove('animate-pulse');
+                }
+            }, 10000);
+        });
     </script>
 </body>
+
 </html>
