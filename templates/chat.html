@@ -109,6 +109,70 @@
             max-width: 100%;
         }
 
+        .prose a {
+            color: #7f00ff;
+            text-decoration: none;
+        }
+
+        .prose a:hover {
+            text-decoration: underline;
+        }
+
+        /* Headings */
+        .prose h1 {
+            font-size: 2em;
+            font-weight: 700;
+            margin-top: 1.5em;
+            margin-bottom: 0.5em;
+        }
+
+        .prose h2 {
+            font-size: 1.5em;
+            font-weight: 600;
+            margin-top: 1.2em;
+            margin-bottom: 0.4em;
+        }
+
+        .prose h3 {
+            font-size: 1.25em;
+            font-weight: 600;
+            margin-top: 1em;
+            margin-bottom: 0.3em;
+        }
+
+        .prose h4 {
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-top: 0.8em;
+            margin-bottom: 0.2em;
+        }
+
+        /* Lists */
+        .prose ul {
+            list-style-type: disc;
+            padding-left: 1.5em;
+            margin-top: 0.5em;
+            margin-bottom: 0.5em;
+        }
+
+        .prose ol {
+            list-style-type: decimal;
+            padding-left: 1.5em;
+            margin-top: 0.5em;
+            margin-bottom: 0.5em;
+        }
+
+        .prose li {
+            margin-top: 0.2em;
+            margin-bottom: 0.2em;
+        }
+
+        .prose li>ul,
+        .prose li>ol {
+            margin-top: 0.2em;
+            margin-bottom: 0.2em;
+        }
+
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -266,14 +330,16 @@
                 <!-- Render messages from the server -->
                 {% for message in messages %}
                 <div class="message {{ message.role }}">
-                    <div class="prose dark:prose-invert">{{ message.content | safe }}</div>
+                    <div class="prose dark:prose-invert"
+                        x-init="$el.innerHTML = marked.parse(`{{ message.content | safe }}`)"></div>
                 </div>
                 {% endfor %}
             </div>
 
             <form id="chatForm" class="pt-4 w-full">
                 <div class="flex items-center gap-4">
-                    <input type="text" name="message" id="voice-input" placeholder="Type your message..." autocomplete="off"
+                    <input type="text" name="message" id="voice-input" placeholder="Type your message..."
+                        autocomplete="off"
                         class="flex-1 rounded-lg border border-black px-4 py-2 focus:outline-none focus:ring-2 focus:ring-gray-400 bg-[var(--input-bg-color)] text-[var(--input-text-color)] transition-colors duration-200"
                         required>
                     <button id="start-voice" type="button" disabled
