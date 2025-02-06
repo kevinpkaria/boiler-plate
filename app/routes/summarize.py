@@ -2,6 +2,7 @@ from typing import Any, Dict, List, Optional
 
 from app.routes.bot.gpt import get_completion_gpt
 
+
 def generate_summary(messages: List[Dict[str, Any]]) -> str:
     """
     Generate a 5-6 word summary from the last two messages.
@@ -25,7 +26,7 @@ def generate_summary(messages: List[Dict[str, Any]]) -> str:
         messages=[{"role": "user", "content": prompt}],
         model="gpt-4o",
         temperature=0.5,  # Adjust temperature for creativity
-        max_tokens=50  # Limit tokens to ensure brevity
+        max_tokens=50,  # Limit tokens to ensure brevity
     )
 
     return summary
