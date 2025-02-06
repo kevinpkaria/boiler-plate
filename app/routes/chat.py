@@ -14,7 +14,7 @@ from app.routes.bot.fynd_bot import (
     get_conversations,
     process_query,
 )
-from app.routes.summarize import generate_summary
+from app.routes.bot.summarize import generate_summary
 
 templates = Jinja2Templates(directory="templates")
 llm = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
