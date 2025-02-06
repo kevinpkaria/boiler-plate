@@ -14,6 +14,7 @@ from app.routes.bot.fynd_bot import (
     get_conversations,
     process_query,
 )
+from app.routes.summarize import generate_summary
 
 templates = Jinja2Templates(directory="templates")
 llm = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -52,7 +53,7 @@ async def chat_page(
     # Fetch all messages for the given conversation_id
     messages = await get_conversations(conversation_id)
     if (len(messages) >= 2) and (conversation.title == "New Chat"):
-        conversation.title = f'{messages[-1]["content"][:24]}...'
+        conversation.title = generate_summary(messages)
         db.commit()
 
     # Pass the messages to the template

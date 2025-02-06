@@ -18,7 +18,6 @@ def get_completion_gpt(
     temperature: float = 0,
     max_tokens: int = 1024,
     tools: Optional[List[Dict[str, Any]]] = None,
-    response_format: Optional[Dict[str, Any]] = {"type": "json_object"},
     seed: Optional[int] = 143,
     tool_choice=None,
 ) -> str:
@@ -31,7 +30,6 @@ def get_completion_gpt(
         messages=messages,
         temperature=temperature,
         max_tokens=max_tokens,
-        response_format=response_format,
         tools=tools,
         seed=seed,
         tool_choice=tool_choice,

@@ -7,8 +7,45 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg-color: #FFFFFF; /* Light mode background */
+            --main-box-color: #F5F5F5; /* Light mode main box */
+            --text-color: #000000; /* Light mode text */
+            --input-bg-color: #F5F5F5; /* Light mode input background */
+            --input-text-color: #000000; /* Light mode input text */
+            --button-bg-color: #CCCCCC; /* Light mode button */
+            --button-hover-bg-color: #B3B3B3; /* Light mode button hover */
+            --button-text-color: #000000; /* Light mode button text */
+            --message-user-bg-color: #E0E0E0; /* Light mode user chat bubble */
+            --message-assistant-bg-color: #D6D6D6; /* Light mode AI chat bubble */
+            --aside-bg-color: #F5F5F5; /* Light mode aside */
+            --aside-text-color: #000000; /* Light mode aside text */
+            --placeholder-text-color: #000000; /* Light mode placeholder text */
+            --title-text-color: #000000; /* Light mode title text */
+        }
+
+        .dark {
+            --bg-color: #121212; /* Dark mode background */
+            --main-box-color: #1E1E1E; /* Dark mode main box */
+            --text-color: #FFFFFF; /* Dark mode text */
+            --input-bg-color: #1E1E1E; /* Dark mode input background */
+            --input-text-color: #FFFFFF; /* Dark mode input text */
+            --button-bg-color: #444444; /* Dark mode button */
+            --button-hover-bg-color: #555555; /* Dark mode button hover */
+            --button-text-color: #FFFFFF; /* Dark mode button text */
+            --message-user-bg-color: #292929; /* Dark mode user chat bubble */
+            --message-assistant-bg-color: #333333; /* Dark mode AI chat bubble */
+            --aside-bg-color: #1E1E1E; /* Dark mode aside */
+            --aside-text-color: #FFFFFF; /* Dark mode aside text */
+            --placeholder-text-color: #FFFFFF; /* Dark mode placeholder text */
+            --title-text-color: #FFFFFF; /* Dark mode title text */
+        }
+
         body {
             font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0; /* Remove default margin */
         }
         .message-container {
             scroll-behavior: smooth;
@@ -16,26 +53,21 @@
         .message {
             opacity: 0;
             animation: fadeIn 0.3s ease-in forwards;
-            margin: 1rem 0;
+            margin: 0rem 0;
             max-width: 80%;
             padding: 1rem;
-            border-radius: 1rem;
         }
         .message.user {
             margin-left: auto;
-            background-color: #3b82f6;
-            color: white;
+            background-color: var(--message-user-bg-color);
+            color: var(--text-color);
             border-radius: 1rem 1rem 0 1rem;
         }
         .message.assistant {
             margin-right: auto;
-            background-color: #f3f4f6;
-            color: #1f2937;
+            background-color: var(--message-assistant-bg-color);
+            color: var(--text-color);
             border-radius: 1rem 1rem 1rem 0;
-        }
-        .dark .message.assistant {
-            background-color: #374151;
-            color: #f3f4f6;
         }
         .prose {
             max-width: 100%;
@@ -44,82 +76,123 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        .resize-handle {
+        width: 5px;
+        background-color: #ccc;
+        cursor: ew-resize;
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 10;
+    }
         aside {
-            background-color: #f3f4f6; /* Light mode background */
-            color: #1f2937; /* Light mode text color */
+            position: relative; /* Ensure the handle is positioned correctly */
+            transition: width 0.2s ease; /* Smooth transition */
+            min-width: 200px; /* Minimum width */
+            max-width: 500px;
+            background-color: var(--aside-bg-color);
+            color: var(--aside-text-color);
+            width: 19rem; /* Wider sidebar */
+            transition: width 0.3s ease; /* Animation for collapsing */
         }
-        .dark aside {
-            background-color: #374151; /* Dark mode background */
-            color: #f3f4f6; /* Dark mode text color */
+        input::placeholder {
+            color: var(--placeholder-text-color);
+        }
+        .title {
+            color: var(--title-text-color);
         }
     </style>
 </head>
-<body class="antialiased transition-colors duration-200 dark bg-gray-900" x-data="{ darkMode: true }" :class="darkMode ? 'dark bg-gray-900' : 'bg-gray-50'">
-    <div class="min-h-screen flex">
-        <!-- Sidebar -->
-        <aside class="w-64 p-4 sticky top-0 h-screen overflow-y-auto">
-            <h2 class="text-lg font-semibold mb-4">Conversations</h2>
-            <button class="mb-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors duration-200" onclick="createNewChat()">New Chat 💬</button>
+<body class="antialiased transition-colors duration-200 flex min-h-screen w-full" x-data="{ darkMode: true, sidebarOpen: true }" :class="darkMode ? 'dark' : ''">
+    <!-- Sidebar -->
+    <aside x-show="sidebarOpen" class="flex flex-col p-4 sticky top-0 h-screen overflow-y-auto transition-width duration-300" style="display: none;">
+        <div class="resize-handle"></div>
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-sm font-semibold">Chats</h2>
+            <div class="flex space-x-2">
+                <button @click="sidebarOpen = !sidebarOpen" class="flex items-center justify-center bg-[var(--button-bg-color)] hover:bg-[var(--button-hover-bg-color)] text-[var(--button-text-color)] w-10 h-10 rounded-lg transition-colors duration-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-sidebar"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg>
+                </button>
+                <button class="flex items-center justify-center bg-[var(--button-bg-color)] hover:bg-[var(--button-hover-bg-color)] text-[var(--button-text-color)] w-10 h-10 rounded-lg transition-colors duration-200" onclick="createNewChat()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-edit"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                </button>
+            </div>
+        </div>
+        <div class="flex flex-col space-y-4">
             <ul id="conversationList" class="space-y-2">
                 <!-- Example conversation item -->
-                <li class="flex justify-between items-center">
-                    <span>Conversation ID</span>
-                    <button class="text-red-500 hover:text-red-700" onclick="deleteConversation('conversation_id')">Delete</button>
+                <li class="flex items-center space-x-2">
+                    <a href="#" class="flex-1 text-sm truncate">Conversation ID</a>
+                    <button class="flex items-center justify-center bg-[var(--button-bg-color)] hover:bg-[var(--button-hover-bg-color)] text-[var(--button-text-color)] w-10 h-10 rounded-lg transition-colors duration-200" onclick="deleteConversation('conversation_id')">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-trash-2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                    </button>
                 </li>
                 <!-- More conversation items will be inserted here -->
             </ul>
-        </aside>
+        </div>
+    </aside>
 
-        <!-- Main Content -->
-        <div class="flex-1">
-            <!-- Header -->
-            <header class="fixed w-full top-0 z-10 border-b dark:border-gray-700 bg-white dark:bg-gray-800 transition-colors duration-200">
-                <div class="container mx-auto px-4 py-4 flex justify-between items-center">
-                    <h1 class="text-xl font-semibold text-gray-800 dark:text-white">🙋🏼‍♀️ FiFi - Fynd Seller Support Assistant</h1>
-                    <button 
-                        @click="darkMode = !darkMode" 
-                        class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+    <!-- Buttons when sidebar is collapsed -->
+    <div class="fixed top-0 left-0 p-4" x-show="!sidebarOpen">
+        <div class="flex space-x-2">
+            <button @click="sidebarOpen = !sidebarOpen" class="flex items-center justify-center bg-[var(--button-bg-color)] hover:bg-[var(--button-hover-bg-color)] text-[var(--button-text-color)] w-10 h-10 rounded-lg transition-colors duration-200">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-sidebar"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg>
+            </button>
+            <button class="flex items-center justify-center bg-[var(--button-bg-color)] hover:bg-[var(--button-hover-bg-color)] text-[var(--button-text-color)] w-10 h-10 rounded-lg transition-colors duration-200" onclick="createNewChat()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-edit"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Dark Mode Toggle Button -->
+    <div class="fixed top-0 right-0 p-4">
+        <button 
+                        type="button" 
+                        @click="darkMode = !darkMode"
+                        class="flex items-center justify-center bg-[var(--button-bg-color)] hover:bg-[var(--button-hover-bg-color)] text-[var(--button-text-color)] px-4 py-2 rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
                     >
-                        <svg x-show="!darkMode" class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg x-show="!darkMode" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m8-8h1M3 12H2m15.364 6.364l.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707" />
+                        </svg>
+                        <svg x-show="darkMode" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
                         </svg>
-                        <svg x-show="darkMode" class="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707"/>
-                        </svg>
                     </button>
-                </div>
-            </header>
+    </div>
 
-            <!-- Chat Container -->
-            <div class="container mx-auto px-4 pt-20 pb-24">
-                <div id="messageContainer" class="message-container space-y-4 pb-4">
-                    <!-- Render messages from the server -->
-                    {% for message in messages %}
-                        <div class="message {{ message.role }}">
-                            <div class="prose dark:prose-invert">{{ message.content | safe }}</div>
-                        </div>
-                    {% endfor %}
-                </div>
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col items-center justify-center">
+        <div class="w-full max-w-6xl text-center text-3xl font-extrabold title mb-6 tracking-wide">
+            🙋🏼‍♀️ FiFi - Fynd Seller Support Assistant
+        </div>
+
+        <div class="w-full max-w-6xl bg-[var(--main-box-color)] shadow-lg rounded-xl p-6 flex flex-col gap-4 w-full sm:w-4/5 md:w-3/4 lg:w-2/3">
+            <div id="messageContainer" class="message-container flex flex-col space-y-4 overflow-y-auto h-[500px] w-full">
+                <!-- Render messages from the server -->
+                {% for message in messages %}
+                    <div class="message {{ message.role }}">
+                        <div class="prose dark:prose-invert">{{ message.content | safe }}</div>
+                    </div>
+                {% endfor %}
             </div>
 
-            <!-- Input Form -->
-            <form id="chatForm" class="fixed bottom-0 w-full bg-white dark:bg-gray-800 border-t dark:border-gray-700 transition-colors duration-200">
-                <div class="container mx-auto px-4 py-4">
-                    <div class="flex gap-4">
-                        <input 
-                            type="text" 
-                            name="message" 
-                            placeholder="Type your message..." 
-                            class="flex-1 rounded-lg border dark:border-gray-600 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white transition-colors duration-200"
-                            required
-                        >
-                        <button 
-                            type="submit" 
-                            class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition-colors duration-200"
-                        >
-                            Send
-                        </button>
-                    </div>
+            <form id="chatForm" class="pt-4 w-full">
+                <div class="flex items-center gap-4">
+                    <input 
+                        type="text" 
+                        name="message" 
+                        placeholder="Type your message..." 
+                        class="flex-1 rounded-lg border border-black px-4 py-2 focus:outline-none focus:ring-2 focus:ring-gray-400 bg-[var(--input-bg-color)] text-[var(--input-text-color)] transition-colors duration-200"
+                        required
+                    >
+                    <button 
+                        type="submit" 
+                        class="bg-[var(--button-bg-color)] hover:bg-[var(--button-hover-bg-color)] text-[var(--button-text-color)] px-6 py-2 rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
+                    >
+                        Send
+                    </button>
+                    
                 </div>
             </form>
         </div>
@@ -232,10 +305,12 @@
 
                 conversationIds.forEach(conversation => {
                     const listItem = document.createElement('li');
-                    listItem.className = 'flex justify-between items-center';
+                    listItem.className = 'flex items-center space-x-2';
                     listItem.innerHTML = `
-                        <a href="/home?company_id=${companyId}&conversation_id=${conversation.id}" class="block p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700">${conversation.title}</a>
-                        <button class="text-red-500 hover:text-red-700" onclick="deleteConversation('${conversation.id}')">🗑️</button>
+                        <a href="/home?company_id=${companyId}&conversation_id=${conversation.id}" class="flex-1 text-sm truncate">${conversation.title}</a>
+                        <button class="flex items-center justify-center bg-[var(--button-bg-color)] hover:bg-[var(--button-hover-bg-color)] text-[var(--button-text-color)] w-10 h-10 rounded-lg transition-colors duration-200" onclick="deleteConversation('${conversation.id}')">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-trash-2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                        </button>
                     `;
                     conversationList.appendChild(listItem);
                 });
@@ -265,6 +340,48 @@
                 console.error('Error creating new chat:', error);
             }
         }
+
+        document.addEventListener('DOMContentLoaded', () => {
+        const sidebar = document.querySelector('aside');
+        const handle = document.querySelector('.resize-handle');
+        let isResizing = false;
+
+        handle.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            document.body.style.cursor = 'ew-resize';
+        });
+
+        document.addEventListener('mousemove', throttle((e) => {
+            if (!isResizing) return;
+            const newWidth = e.clientX;
+            sidebar.style.width = `${newWidth}px`;
+        }, 16)); // Throttle to roughly 60fps
+
+        document.addEventListener('mouseup', () => {
+            isResizing = false;
+            document.body.style.cursor = 'default';
+        });
+
+        function throttle(func, limit) {
+            let lastFunc;
+            let lastRan;
+            return function(...args) {
+                const context = this;
+                if (!lastRan) {
+                    func.apply(context, args);
+                    lastRan = Date.now();
+                } else {
+                    clearTimeout(lastFunc);
+                    lastFunc = setTimeout(function() {
+                        if ((Date.now() - lastRan) >= limit) {
+                            func.apply(context, args);
+                            lastRan = Date.now();
+                        }
+                    }, limit - (Date.now() - lastRan));
+                }
+            };
+        }
+    });
     </script>
 </body>
 </html>
