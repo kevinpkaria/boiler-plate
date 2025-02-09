@@ -1,7 +1,8 @@
 import os
+import json
 from typing import AsyncGenerator, Optional
 
-from fastapi import APIRouter, Depends, Form, HTTPException, Path, Request
+from fastapi import APIRouter, Depends, Form, HTTPException, Path, Request, WebSocket
 from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 from openai import OpenAI
@@ -17,7 +18,7 @@ from app.routes.bot.fynd_bot import (
 from app.routes.bot.summarize import generate_summary
 
 templates = Jinja2Templates(directory="templates")
-llm = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+llm = OpenAI(api_key=os.getenv("DESCGEN_OPENAI_API_KEY"))
 
 router = APIRouter()
 
@@ -123,3 +124,31 @@ async def delete_conversation(conversation_id: str, db: Session = Depends(get_db
         raise HTTPException(status_code=404, detail="Conversation not found")
     db.delete(conversation)
     db.commit()
+
+# Store connected WebSocket clients
+clients = []
+
+@router.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    clients.append(websocket)
+    try:
+        while True:
+            await websocket.receive_text()  # Keep the connection open
+    except:
+        clients.remove(websocket)
+
+@router.post("/webhook")
+async def webhook_listener(request: Request):
+    payload = await request.json()
+    event_name = payload.get("eventName")
+    role = payload.get("data", {}).get("role")
+    thread_id = payload.get("data", {}).get("threadId")
+
+    # Send update to WebSocket clients
+    if event_name == "conversations/messages/create" and role == "support":
+        message = json.dumps({"refresh": True, "threadId": thread_id})
+        for client in clients:
+            await client.send_text(message)
+
+    return {"message": "Webhook received"}

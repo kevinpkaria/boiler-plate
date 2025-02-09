@@ -448,10 +448,10 @@
             function renderMessage(content, sender) {
                 const sanitizedHTML = marked.parse(content);
                 const messageHTML = `
-                <div class="message ${sender}">
-                    <div class="prose dark:prose-invert">${sanitizedHTML}</div>
-                </div>
-            `;
+                    <div class="message ${sender}">
+                        <div class="prose dark:prose-invert">${sanitizedHTML}</div>
+                    </div>
+                `;
                 container.insertAdjacentHTML('beforeend', messageHTML);
                 container.scrollTop = container.scrollHeight; // Autoscroll
             }
@@ -673,6 +673,18 @@
             }, 10000);
         });
     </script>
-</body>
+    <script>
+        console.log("Listening for WebSocket message: wss://urchin-app-bv2e9.ondigitalocean.app/ws...");
+        const refreshConversationId = new URLSearchParams(window.location.search).get("conversation_id");
+        const ws = new WebSocket("wss://urchin-app-bv2e9.ondigitalocean.app/ws");
 
+        ws.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            if (data.refresh && data.threadId === refreshConversationId) {
+                console.log("Received WebSocket message: Refreshing page...");
+                location.reload();
+            }
+        };
+    </script>
+</body>
 </html>

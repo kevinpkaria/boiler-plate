@@ -12,7 +12,7 @@ RUN apk add --update make automake gcc g++ subversion python3-dev musl-dev libff
 COPY requirements.txt .
 
 # Install the dependencies
-RUN pip install --upgrade pip setuptools==70.0.0
+RUN pip install --upgrade pip setuptools==70.0.0 psycopg2-binary
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the application code into the container

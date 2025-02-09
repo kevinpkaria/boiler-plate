@@ -6,7 +6,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 
 Base = declarative_base()
-engine = create_engine(os.getenv("DATABASE_URL"), echo=True)
+engine = create_engine(os.getenv("POSTGRES_HACKTIMAS_READ_WRITE"), echo=True)
 SessionLocal = sessionmaker(bind=engine)
 
 
